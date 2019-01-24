@@ -1,0 +1,271 @@
+// 不显示滚动条 
+document.body.style.overflow = "hidden"; 
+//显示滚动条
+document.body.style.overflow = "visible";
+
+
+
+防止被选上：
+window.getSelection ? window.getSelection().removeAllRanges() : document.selection.empty();
+
+*******************************
+scrolltop的兼容写法：
+var scrollTop = window.pageYOffset || document.documentElement.scrollTop || document.body.scrollTop || 0;
+
+*******************************
+
+封装scrolltop
+ function scroll() {
+        if(window.pageYOffset != null)  //  ie9+ 和其他浏览器
+        {
+            return {
+                left: window.pageXOffset,
+                top: window.pageYOffset
+            }
+        }
+        else if(document.compatMode == "CSS1Compat")  // 声明的了 DTD
+          // 检测是不是怪异模式的浏览器 -- 就是没有 声明<!DOCTYPE html>
+        {
+            return {
+                left: document.documentElement.scrollLeft,
+                top: document.documentElement.scrollTop
+            }
+        }
+        return { //  剩下的肯定是怪异模式的
+            left: document.body.scrollLeft,
+            top: document.body.scrollTop
+        }
+    }
+    window.onscroll = function() {
+        console.log(scroll().top);
+    }
+
+*********************************
+
+
+封装可视区域大小的函数
+ function client() {
+        if(window.innerWidth != null)  // ie9 +  最新浏览器
+        {
+            return {
+                width: window.innerWidth,
+                height: window.innerHeight
+            }
+        }
+        else if(document.compatMode === "CSS1Compat")  // 标准浏览器
+        {
+            return {
+                width: document.documentElement.clientWidth,
+                height: document.documentElement.clientHeight
+            }
+        }
+        return {   // 怪异浏览器
+            width: document.body.clientWidth,
+            height: document.body.clientHeight
+
+        }
+    }
+
+*****************************************
+
+阻止冒泡兼容性写法
+
+ if(ev&&ev.stopPropagation){
+                    ev.stopPropagation();
+                }else {
+                    ev.cancelBubble = true;
+                }
+
+*************************************
+
+
+点击空白隐藏的兼容性写法（判断当前对象）
+var tar = evt.target ? evt.target.id : evt.srcElement.id;
+
+                if(tar != "box"){
+                    box.style.display = "none";
+                    document.body.style.overflow = "visible";
+                }
+
+********************************************
+
+
+判断是否有文字选上的兼容性写法
+                if(window.getSelection){
+                    txt = window.getSelection().toString();
+                }else{
+                    txt = document.selection.createRange().text;
+                }
+
+
+****************************************
+做无缝滚动，需要把第一张图片克隆到最后面
+克隆语句
+  ul.appendChild(ul.children[0].cloneNode(true));
+
+
+***********************************************
+匀速动画的封装函数：：
+    function run(obj,target){
+        clearInterval(obj.timer);  // 先清除定时器
+        var speed = obj.offsetLeft < target ? 15 : -15;  // 用来判断 应该 +  还是 -
+        obj.timer = setInterval(function() {
+            var result = target - obj.offsetLeft; // 因为他们的差值不会超过5
+            obj.style.left = obj.offsetLeft + speed + "px";
+            if(Math.abs(result)<=15)  // 如果差值不小于 5 说明到位置了
+            {
+                clearInterval(obj.timer);
+                obj.style.left = target + "px";  // 有5像素差距   我们直接跳转目标位置
+            }
+        },10)
+    }
+
+
+
+******************************************
+缓动动画封装函数：
+ function animate(obj,target){  //  第一个参数 动谁   第二个参数  动多少
+        clearInterval(obj.timer);
+        obj.timer = setInterval(function() {
+              // 计算步长   动画的原理    盒子本身的位置  +  步长
+              var step = (target - obj.offsetLeft) / 10;  // 步长
+              step =  step > 0 ? Math.ceil(step) : Math.floor(step);  //  取整步长
+              // obj.style.left = 盒子本身的位置  +  步长
+              obj.style.left = obj.offsetLeft + step + "px";
+              if(obj.offsetLeft == target){
+                  clearInterval(obj.timer);
+              }
+        },30)
+    }
+
+
+************************************************
+返回当前样式的封装函数：
+
+    function getStyle(obj,attr) {  //  谁的      那个属性
+        if(obj.currentStyle)  // ie 等
+        {
+            return obj.currentStyle[attr];  // 返回传递过来的某个属性
+        }
+        else
+        {
+            return window.getComputedStyle(obj,null)[attr];  // w3c 浏览器
+        }
+    }
+
+    console.log(getStyle(demo,"width"));
+
+******************************************************************
+封装运动框架的单个属性:
+
+
+   function run(obj,attr,target)  {  // 给谁    什么属性   改为多少
+         clearInterval(obj.timer);
+         obj.timer = setInterval(function() {
+             //计算步长   动画的原理      盒子本身的样式 +  步长
+             //我们怎么知道我们当前的样式
+            // 先得到 当前的样式，然后 用 target 减去 就可以  除以 10  计算步长
+             var current = parseInt(getStyle(obj,attr));  // 得到当前的样式 别忘乐去掉px
+             var step = ( target -current ) / 10;
+             step = step > 0 ? Math.ceil(step) : Math.floor(step);
+             // 要做动画了
+             //obj.style.left =  obj.offsetLeft + step + "px";
+             obj.style[attr] =  current  + step + "px";
+             if(current == target )
+             {
+                 clearInterval(obj.timer);
+             }
+             //console.log(current);
+         } ,30)
+    }
+
+
+    function getStyle(obj,attr) {  //  谁的      那个属性
+        if(obj.currentStyle)  // ie 等
+        {
+            return obj.currentStyle[attr];  // 返回传递过来的某个属性
+        }
+        else
+        {
+            return window.getComputedStyle(obj,null)[attr];  // w3c 浏览器
+        }
+    }
+
+
+**************************************************************
+
+封装运动框架基本函数，多个属性，添加定时器
+调用函数 animate(box,{width:200,height:200},function()
+{ alert("11";})
+  // 多个属性运动框架
+function animate(obj,json,fn) {  // 给谁    json
+    clearInterval(obj.timer);
+    obj.timer = setInterval(function() {
+        var flag = true;  // 用来判断是否停止定时器   一定写到遍历的外面
+        for(var attr in json){   // attr  属性     json[attr]  值
+            //开始遍历 json
+            // 计算步长    用 target 位置 减去当前的位置  除以 10
+            // console.log(attr);
+            var current = 0;
+            if(attr == "opacity")
+            {
+                current = Math.round(parseInt(getStyle(obj,attr)*100)) || 0;
+                console.log(current);
+            }
+            else
+            {
+                current = parseInt(getStyle(obj,attr)); // 数值
+            }
+            // console.log(current);
+            // 目标位置就是  属性值
+            var step = ( json[attr] - current) / 10;  // 步长  用目标位置 - 现在的位置 / 10
+            step = step > 0 ? Math.ceil(step) : Math.floor(step);
+            //判断透明度
+            if(attr == "opacity")  // 判断用户有没有输入 opacity
+            {
+                if("opacity" in obj.style)  // 判断 我们浏览器是否支持opacity
+                {
+                    // obj.style.opacity
+                    obj.style.opacity = (current + step) /100;
+                }
+                else
+                {  // obj.style.filter = alpha(opacity = 30)
+                    obj.style.filter = "alpha(opacity = "+(current + step)* 10+")";
+
+                }
+            }
+            else if(attr == "zIndex")
+            {
+                obj.style.zIndex = json[attr];
+            }
+            else
+            {
+                obj.style[attr] = current  + step + "px" ;
+            }
+
+            if(current != json[attr])  // 只要其中一个不满足条件 就不应该停止定时器  这句一定遍历里面
+            {
+                flag =  false;
+            }
+        }
+        if(flag)  // 用于判断定时器的条件
+        {
+            clearInterval(obj.timer);
+            //alert("ok了");
+            if(fn)   // 很简单   当定时器停止了。 动画就结束了  如果有回调，就应该执行回调
+            {
+                fn(); // 函数名 +  （）  调用函数  执行函数
+            }
+        }
+    },10)
+}
+function getStyle(obj,attr) {  //  谁的      那个属性
+    if(obj.currentStyle)  // ie 等
+    {
+        return obj.currentStyle[attr];  // 返回传递过来的某个属性
+    }
+    else
+    {
+        return window.getComputedStyle(obj,null)[attr];  // w3c 浏览器
+    }
+}
